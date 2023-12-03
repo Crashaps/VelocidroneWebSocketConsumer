@@ -32,14 +32,20 @@
 
             if (dataset) {
                 // Update existing dataset
-                dataset.data.push({ x: (data.gateData[data.gateData.length - 1].lap.toString()) + "-" + data.gateData[data.gateData.length - 1].gate.toString(), y: data.time });
+                dataset.data.push({ 
+                    x: (data.gateData[data.gateData.length - 1].lap.toString()) + "-" + data.gateData[data.gateData.length - 1].gate.toString(), 
+                    y: data.gateData[data.gateData.length - 1].time 
+                });
             } else {
                 // Create new dataset for this pilot
                 raceChart.data.datasets.push({
                     label: data.pilotName,
-                    data: [{ x: (data.gateData[data.gateData.length - 1].lap.toString()) + "-" + data.gateData[data.gateData.length - 1].gate.toString(), y: data.time }],
+                    data: [{ 
+                        x: (data.gateData[data.gateData.length - 1].lap.toString()) + "-" + data.gateData[data.gateData.length - 1].gate.toString(), 
+                        y: data.gateData[data.gateData.length - 1].time 
+                    }],
                     borderColor: data.colour, // Assuming pilotData has a color property
-                    fill: false // Set to true if you want the area under the line filled
+                    fill: true // Set to true if you want the area under the line filled
                 });
             }
 
