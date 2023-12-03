@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Race Data Graph</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
+
 <body>
     <canvas id="raceChart"></canvas>
     <script>
@@ -13,14 +15,7 @@
         var raceChart = new Chart(ctx, {
             type: 'line',
             data: {
-                datasets: [{
-                    label: '.MrE.',
-                    data: []
-                },
-                {
-                    label: 'crashmat',
-                    data: []
-                }]
+                datasets: []
             },
             options: {
                 scales: {
@@ -31,16 +26,27 @@
             }
         });
 
-        socket.on('raceDataUpdate', function(data) {
-            // Update the chart with the new data
-            raceChart.data.labels.push(data.gateData[data.gateData.length - 1].lap);
-            raceChart.data.datasets.forEach((dataset) => {
-                if (dataset.label == data.pilotName){
-                    dataset.data.push(data.gateData[data.gateData.length - 1].time);
-                }
-            });
+        socket.on('raceDataUpdate', function (data) {
+          
+            let dataset = raceChart.data.datasets.find(ds => ds.label === data.pilotName);
+
+            if (dataset) {
+                // Update existing dataset
+                dataset.data.push({ x: (data.gateData[data.gateData.length - 1].lap.toString()) + "-" + data.gateData[data.gateData.length - 1].gate.toString(), y: data.time });
+            } else {
+                // Create new dataset for this pilot
+                raceChart.data.datasets.push({
+                    label: data.pilotName,
+                    data: [{ x: (data.gateData[data.gateData.length - 1].lap.toString()) + "-" + data.gateData[data.gateData.length - 1].gate.toString(), y: data.time }],
+                    borderColor: data.colour, // Assuming pilotData has a color property
+                    fill: false // Set to true if you want the area under the line filled
+                });
+            }
+
+            // Update the chart
             raceChart.update();
         });
     </script>
 </body>
+
 </html>

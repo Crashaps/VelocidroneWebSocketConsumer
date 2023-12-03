@@ -13,7 +13,7 @@ const dbConnectionString = 'mongodb://127.0.0.1:27017';
 // Connect to MongoDB
 mongoose.connect(dbConnectionString);
 
-var eventId = 'mellinda';
+var eventId = 'jeff';
 var heatDateTime;
 var heatStart = false;
 var heatId;

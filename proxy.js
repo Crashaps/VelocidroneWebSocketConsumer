@@ -7,7 +7,7 @@ const RACEDATAKEYNAME = 'racedata';
 const RACESTATUSKEYNAME = 'racestatus';
 const RACEACTIONKEYNAME = 'raceaction';
 
-function message(data){
+async function message(data){
     
     var d = data.toString();
     
@@ -15,45 +15,26 @@ function message(data){
 
     if (JSON.parse(d)["racedata"] == null) return;
 
-    postMessage('/racedata', data);
+    await postMessage('/racedata', data);
 
 }
 
-function postMessage(url, data) {
+async function postMessage (url, data) {
     // Convert data to a JSON string
-    const dataString = data.toString();
-
-    var post_options = {
-        host: '127.0.0.1',
-        port: '3000',
-        path: url,
+    var res = await fetch('http://127.0.0.1:3000/racedata', {
         method: 'POST',
+        body: data.toString(),
         headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(dataString)
+            'Content-Type': 'application/json'
         }
-    };
-  
-    // Set up the request
-    var post_req = http.request(post_options, function(res) {
-        res.setEncoding('utf8');
-        res.on('data', function (chunk) {
-            console.log('Response: ' + chunk);
-        });
-    });
+      });
 
-    post_req.on('error', function (err) {
-        console.log('Request error: ' + err.message);
-    });
 
-    // Write data to request body
-    post_req.write(dataString);
-    post_req.end();
 }
 
-//await VelocidroneClient.initialise("settings.json", message);
+await VelocidroneClient.initialise("settings.json", message);
 
-// fs.readFile("D:\\Code\\Velocidrone - socketTest\\V1data-test.txt",  "utf16le", (err, data) => {
+// fs.readFile("D:\\Code\\VelocidroneWebSocketConsumer\\V1data-test.txt",  "utf16le", async (err, data) => {
 //     let dataRows = data.split(/\r?\n/);
 //     for (let row in dataRows)
 //     {
@@ -63,7 +44,7 @@ function postMessage(url, data) {
 
 //         if (JSON.parse(d)["racedata"] == null) continue;
 
-//         postMessage('/racedata', d);
+//         await postMessage('/racedata', d);
 //     }
 
 // });
