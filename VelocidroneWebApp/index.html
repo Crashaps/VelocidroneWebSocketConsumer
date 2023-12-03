@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Race Data Graph</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <canvas id="raceChart"></canvas>
+    <script>
+        var socket = io();
+        var ctx = document.getElementById('raceChart').getContext('2d');
+        var raceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: [{
+                    label: '.MrE.',
+                    data: []
+                },
+                {
+                    label: 'crashmat',
+                    data: []
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        socket.on('raceDataUpdate', function(data) {
+            // Update the chart with the new data
+            raceChart.data.labels.push(data.gateData[data.gateData.length - 1].lap);
+            raceChart.data.datasets.forEach((dataset) => {
+                if (dataset.label == data.pilotName){
+                    dataset.data.push(data.gateData[data.gateData.length - 1].time);
+                }
+            });
+            raceChart.update();
+        });
+    </script>
+</body>
+</html>
