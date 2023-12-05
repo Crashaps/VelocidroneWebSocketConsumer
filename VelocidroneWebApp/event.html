@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .finish-times {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="event">Event Page</a></li>
+            <li><a href="historical">Historical Data</a></li>
+        </ul>
+    </nav>
+    <div class="finish-times">
+        <h1>Event Finish Times</h1>
+        <table id="finishTimesTable">
+            <thead>
+                <tr>
+                    <th>Pilot Name</th>
+                </tr>
+            </thead>
+            <tbody id="finishTimesBody">
+                <!-- Pilot names and times will be added here -->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="race-chart">
+        <h1>Race Chart</h1>
+        <canvas id="raceChart"></canvas>
+    </div>
+
+    <script>
+        // Fetch and Display Current Finish Times
+        fetch('/current-finish-times')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('finishTimesBody');
+                data.forEach((item, index) => {
+                    let row = tableBody.insertRow();
+                    let pilotNameCell = row.insertCell(0);
+                    pilotNameCell.textContent = item.pilotName;
+
+                    // Assuming item.times is an array of times for each race
+                    item.times.forEach(time => {
+                        let timeCell = row.insertCell();
+                        timeCell.textContent = time;
+                    });
+
+                    // Add new column headers if needed
+                    if (index === 0) {
+                        const tableHead = document.getElementById('finishTimesTable').tHead;
+                        for (let i = 1; i <= item.times.length; i++) {
+                            let newHeader = tableHead.rows[0].insertCell();
+                            newHeader.outerHTML = `<th>Race ${i}</th>`;
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error:', error));
+
+        // Setup for Race Chart
+        var socket = io();
+        var ctx = document.getElementById('raceChart').getContext('2d');
+        var raceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: []
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        socket.on('raceDataUpdate', function (data) {
+            let dataset = raceChart.data.datasets.find(ds => ds.label === data.pilotName);
+            if (dataset) {
+                dataset.data.push({ 
+                    x: (data.gateData[data.gateData.length - 1].lap.toString()) + "-" + data.gateData[data.gateData.length - 1].gate.toString(), 
+                    y: data.gateData[data.gateData.length - 1].time 
+                });
+            } else {
+                raceChart.data.datasets.push({
+                    label: data.pilotName,
+                    data: [{ 
+                        x: (data.gateData[data.gateData.length - 1].lap.toString()) + "-" + data.gateData[data.gateData.length - 1].gate.toString(), 
+                        y: data.gateData[data.gateData.length - 1].time 
+                    }],
+                    borderColor: data.colour,
+                    fill: false
+                });
+            }
+            raceChart.update();
+        });
+    </script>
+</body>
+</html>

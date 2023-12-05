@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Historical Pilot Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/event">Event Page</a></li>
+            <li><a href="/historical">Historical Data</a></li>
+        </ul>
+    </nav>
+    <h1>Historical Pilot Data</h1>
+    <div>
+        <input type="text" id="pilotNameInput" placeholder="Enter Pilot Name">
+        <button id="fetchButton">Fetch Data</button>
+    </div>
+
+    <table id="historicalDataTable">
+        <thead>
+            <tr>
+                <th>Pilot Name</th>
+                <th>Event</th>
+                <th>Race Time</th>
+                <th>Gate-to-Gate Time</th>
+                <th>Time Difference</th>
+            </tr>
+        </thead>
+        <tbody id="historicalDataBody">
+            <!-- Historical data will be added here -->
+        </tbody>
+    </table>
+
+    <script>
+        document.getElementById('fetchButton').addEventListener('click', function() {
+            const pilotName = document.getElementById('pilotNameInput').value;
+            if (pilotName) {
+                fetchHistoricalData(pilotName);
+            } else {
+                alert('Please enter a pilot name.');
+            }
+        });
+
+        function fetchHistoricalData(pilotName) {
+            fetch(`/historical-data/${pilotName}`)
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('historicalDataBody');
+                    tableBody.innerHTML = ''; // Clear existing data
+                    data.forEach(item => {
+                        let row = tableBody.insertRow();
+
+                        let pilotNameCell = row.insertCell();
+                        pilotNameCell.textContent = item.pilotName;
+
+                        let eventCell = row.insertCell();
+                        eventCell.textContent = item.eventId;
+
+                        let raceTimeCell = row.insertCell();
+                        raceTimeCell.textContent = item.raceTime; // Assuming 'raceTime' is a property
+
+                        let gateToGateTimeCell = row.insertCell();
+                        gateToGateTimeCell.textContent = item.gateToGateTime; // Assuming 'gateToGateTime' is a property
+
+                        let timeDiffCell = row.insertCell();
+                        timeDiffCell.textContent = item.timeDifference; // Assuming 'timeDifference' is a property
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error fetching data.');
+                });
+        }
+    </script>
+</body>
+</html>

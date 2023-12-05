@@ -20,18 +20,8 @@ var heatId;
 var raceDateTime;
 var raceStarted = false;
 
-const GateDataSchema = new mongoose.Schema({
-    position: Number,
-    lap: Number,
-    gate: Number,
-    time: Number
-});
-
-const GateData = mongoose.model('GateData', GateDataSchema);
-
 const RaceDataSchema = new mongoose.Schema({
     pilotName: String,
-    //finishTime: Number,
     finished: Boolean,
     colour: String,
     gateData: Array,
@@ -41,28 +31,6 @@ const RaceDataSchema = new mongoose.Schema({
 });
 
 const RaceData = mongoose.model('RaceData', RaceDataSchema);
-
-// const EventDataSchema = new mongoose.Schema({
-//     eventId: String,
-//     pilots: Array
-// });
-
-// const EventData = mongoose.model('EventData', EventDataSchema);
-
-// const HeatDataSchema = new mongoose.Schema({
-//     heatDateTime: Number,
-//     heatId: String,
-//     eventId: String
-// });
-
-// const HeatData = mongoose.model('HeatData', HeatDataSchema);
-
-// const PilotDataSchema = new mongoose.Schema({
-//     pilotName: String
-// });
-
-// const PilotData = mongoose.model('PilotData', PilotDataSchema);
-
 
 // seed leader board, collate rooms, call pilots per group, run 3 races = 1 heat, change group, repeat... all groups run 3 heats, shuffle by points, repeat
 // finish time, number pilots per heat -> assign fastest pilot points = number of pilots, down to 1, repeat for 3 heats * 2, the heat of 4 races
@@ -89,6 +57,7 @@ app.post('/racestatus', async (req, res) => {
 var pilots = {};
 
 app.post('/racedata', async (req, res) => {
+    console.log(req.body);
     var raceData = req.body;
 
     for (let pilotName of Object.keys(raceData["racedata"])) {
@@ -103,27 +72,17 @@ app.post('/racedata', async (req, res) => {
             if (data.gateData[data.gateData.length - 1].time == pilotRace.time){
                 continue;
             }
-
-            data.gateData.push({
-                position: pilotRace.position,
-                lap: pilotRace.lap,
-                gate: pilotRace.gate,
-                time: pilotRace.time
-            });
+            
+            data.gateData.push(createGateData(pilotRace));
         } 
         else{
             data = new RaceData();
             data.pilotName = pilotName;
-            data.colour = pilotRace.colour;
+            data.colour = "#" + pilotRace.colour;
             data.heatId = heatId;
             data.eventId = eventId;
             data.heatDateTime = heatDateTime
-            data.gateData = [{
-                position: pilotRace.position,
-                lap: pilotRace.lap,
-                gate: pilotRace.gate,
-                time: pilotRace.time
-            }];
+            data.gateData = [createGateData(pilotRace)];
 
             pilots[pilotName] = data;
         }
@@ -144,6 +103,14 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 
+app.get('/event', (req, res) => {
+    res.sendFile(__dirname + '/event.html');
+});
+
+app.get('/historical', (req, res) => {
+    res.sendFile(__dirname + '/historical.html');
+});
+
 // Socket.IO connection
 io.on('connection', (socket) => {
     console.log('a user connected');
@@ -152,3 +119,59 @@ io.on('connection', (socket) => {
 server.listen(3000, () => {
     console.log('Server running on port 3000');
 });
+
+function createGateData(pilotRace) {
+    return {
+        position: pilotRace.position,
+        lap: pilotRace.lap,
+        gate: pilotRace.gate,
+        time: pilotRace.time
+    }
+}
+
+app.get('/current-finish-times', async (req, res) => {
+    try {
+        const raceData = await RaceData.find({}); // Adjust query as needed
+
+        var pilots = [];
+
+        // Logic to extract latest finish times
+        for(var p in raceData) {
+            var data = raceData[p];
+
+            const lastGate = data.gateData[data.gateData.length - 1];
+            var pilot = pilots.find((e) => e.pilotName === data.pilotName);
+
+            if (pilot === undefined){
+                pilots.push({pilotName: data.pilotName, times: [data.gateData[data.gateData.length - 1].time]})
+            }
+            else {
+                pilots[pilots.indexOf(pilot)].times.push(data.gateData[data.gateData.length - 1].time)
+            }
+        }
+
+        res.json(pilots);
+    } catch (error) {
+        res.status(500).send("Error fetching finish times");
+    }
+});
+
+app.get('/historical-data/:pilotName', async (req, res) => {
+    try {
+        const pilotName = req.params.pilotName;
+        const historicalData = await RaceData.find({ pilotName: pilotName });
+        // Process data to include race times, gate-to-gate times, etc.
+        // This is a placeholder; actual implementation will depend on your data structure
+        res.json(historicalData.map(createHistoricData));
+    } catch (error) {
+        res.status(500).send("Error fetching historical data");
+    }
+});
+
+function createHistoricData(data) {
+    return {
+        pilotName: data.pilotName,
+        eventId: data.eventId,
+        raceTime: data.gateData[data.gateData.length - 1].time
+    }
+}

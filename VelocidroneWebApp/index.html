@@ -8,6 +8,13 @@
 </head>
 
 <body>
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="event">Event Page</a></li>
+            <li><a href="historical">Historical Data</a></li>
+        </ul>
+    </nav>
     <canvas id="raceChart"></canvas>
     <script>
         var socket = io();
@@ -45,7 +52,7 @@
                         y: data.gateData[data.gateData.length - 1].time 
                     }],
                     borderColor: data.colour, // Assuming pilotData has a color property
-                    fill: true // Set to true if you want the area under the line filled
+                    fill: false // Set to true if you want the area under the line filled
                 });
             }
 
