@@ -23,6 +23,14 @@
         th {
             background-color: #f2f2f2;
         }
+
+        #raceStatusBox {
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            background-color: #f8f8f8;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -46,7 +54,10 @@
             </tbody>
         </table>
     </div>
-
+    <div class="race-status">
+        <h2>Race Status</h2>
+        <div id="raceStatusBox">Waiting for race status...</div>
+    </div>
     <div class="race-chart">
         <h1>Race Chart</h1>
         <canvas id="raceChart"></canvas>
@@ -98,6 +109,14 @@
             }
         });
 
+        socket.on('raceStatus', function (status) {
+            var statusBox = document.getElementById('raceStatusBox');
+            statusBox.textContent = `Race Status: ${status}`;
+            if (status === 'start'){
+                raceChart.data.datasets = [];
+            }
+        });
+        
         socket.on('raceDataUpdate', function (data) {
             let dataset = raceChart.data.datasets.find(ds => ds.label === data.pilotName);
             if (dataset) {

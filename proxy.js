@@ -8,43 +8,70 @@ const RACESTATUSKEYNAME = 'racestatus';
 const RACEACTIONKEYNAME = 'raceaction';
 
 async function message(data){
+    var json = data.toString();
     
-    var d = data.toString();
-    
-    if (d.length == 0) return
+    if (json.length == 0) return
 
-    if (JSON.parse(d)["racedata"] == null) return;
+    var data = JSON.parse(json);
 
-    await postMessage('/racedata', data);
+    var endpoint = null;
 
+    if (data[RACEDATAKEYNAME] != null) {
+        endpoint = '/racedata';
+    }
+    else if (data[RACESTATUSKEYNAME] != null) {
+        endpoint = '/racestatus';
+    }
+
+    if (endpoint){
+        await postMessage(endpoint, data);
+    }
 }
 
 async function postMessage (url, data) {
-    // Convert data to a JSON string
-    var res = await fetch('http://127.0.0.1:3000/racedata', {
-        method: 'POST',
-        body: data.toString(),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-      });
-
-
+   
+    try {
+        var res = await fetch('http://127.0.0.1:3000' + url, {
+            method: 'POST',
+            body: data.toString(),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+    } catch(error) {
+        console.log(error);
+    }
 }
 
-await VelocidroneClient.initialise("settings.json", message);
+//await VelocidroneClient.initialise("settings.json", message);
 
-// fs.readFile("D:\\Code\\VelocidroneWebSocketConsumer\\V1data-test.txt",  "utf16le", async (err, data) => {
-//     let dataRows = data.split(/\r?\n/);
-//     for (let row in dataRows)
-//     {
-//         var d = dataRows[row].toString().trim();
+//await VelocidroneClient.initialise("settings.json", (data) => {console.log(data.toString());});
+
+fs.readFile("./VelocidroneWebApp/crashvelocidronetest.txt",  "utf8", async (err, d) => {
+    let dataRows = d.split(/\r?\n/);
+    for (let row in dataRows)
+    {
+        var json = dataRows[row].toString();
         
-//         if (d.length == 0) continue;
+        if (json.length == 0) return
 
-//         if (JSON.parse(d)["racedata"] == null) continue;
+        var data = JSON.parse(json);
 
-//         await postMessage('/racedata', d);
-//     }
+        var endpoint = null;
 
-// });
+        if (data[RACEDATAKEYNAME] != null) {
+            endpoint = '/racedata';
+        }
+        else if (data[RACESTATUSKEYNAME] != null) {
+            endpoint = '/racestatus';
+        }
+        else if (data["racetype"] != null) {
+            endpoint = '/racetype';
+        }
+
+        if (endpoint){
+            await postMessage(endpoint, JSON.stringify(data));
+        }
+    }
+
+});

@@ -3,15 +3,13 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const socketIo = require('socket.io');
 const http = require('http');
+const fs = require('fs').promises;
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const dbConnectionString = 'mongodb://127.0.0.1:27017';
-
-// Connect to MongoDB
-mongoose.connect(dbConnectionString);
+const settings = require('./settings.json');
 
 var eventId = 'jeff';
 var heatDateTime;
@@ -19,6 +17,8 @@ var heatStart = false;
 var heatId;
 var raceDateTime;
 var raceStarted = false;
+
+var pilots = {};
 
 const RaceDataSchema = new mongoose.Schema({
     pilotName: String,
@@ -32,10 +32,18 @@ const RaceDataSchema = new mongoose.Schema({
 
 const RaceData = mongoose.model('RaceData', RaceDataSchema);
 
+mongoose.connect(settings.mongodb);
+
 // seed leader board, collate rooms, call pilots per group, run 3 races = 1 heat, change group, repeat... all groups run 3 heats, shuffle by points, repeat
 // finish time, number pilots per heat -> assign fastest pilot points = number of pilots, down to 1, repeat for 3 heats * 2, the heat of 4 races
 
 app.use(bodyParser.json());
+
+app.post('createevent', async (req, res) => {
+    // check user logged in 
+
+    // create new event
+});
 
 app.post('/heatstart', async (req, res) => {
     heatDateTime = Date.now();
@@ -45,16 +53,17 @@ app.post('/heatstart', async (req, res) => {
 });
 
 app.post('/racestatus', async (req, res) => {
-    if (req.body.racestatus == 'start') {
+    if (req.body.racestatus.raceAction == 'start') {
         raceDateTime = Date.now();
-        raceStarted = true;
+        raceStarted = true;        
     }
     else if (req.body.racestatus == 'race finished') {
         raceStarted = false;
     }
+    
+    io.emit('raceStatus', req.body.racestatus.raceAction);
+    res.send('Data received and saved');
 });
-
-var pilots = {};
 
 app.post('/racedata', async (req, res) => {
     console.log(req.body);
@@ -120,15 +129,6 @@ server.listen(3000, () => {
     console.log('Server running on port 3000');
 });
 
-function createGateData(pilotRace) {
-    return {
-        position: pilotRace.position,
-        lap: pilotRace.lap,
-        gate: pilotRace.gate,
-        time: pilotRace.time
-    }
-}
-
 app.get('/current-finish-times', async (req, res) => {
     try {
         const raceData = await RaceData.find({}); // Adjust query as needed
@@ -139,7 +139,6 @@ app.get('/current-finish-times', async (req, res) => {
         for(var p in raceData) {
             var data = raceData[p];
 
-            const lastGate = data.gateData[data.gateData.length - 1];
             var pilot = pilots.find((e) => e.pilotName === data.pilotName);
 
             if (pilot === undefined){
@@ -160,8 +159,6 @@ app.get('/historical-data/:pilotName', async (req, res) => {
     try {
         const pilotName = req.params.pilotName;
         const historicalData = await RaceData.find({ pilotName: pilotName });
-        // Process data to include race times, gate-to-gate times, etc.
-        // This is a placeholder; actual implementation will depend on your data structure
         res.json(historicalData.map(createHistoricData));
     } catch (error) {
         res.status(500).send("Error fetching historical data");
@@ -173,5 +170,14 @@ function createHistoricData(data) {
         pilotName: data.pilotName,
         eventId: data.eventId,
         raceTime: data.gateData[data.gateData.length - 1].time
+    }
+}
+
+function createGateData(pilotRace) {
+    return {
+        position: pilotRace.position,
+        lap: pilotRace.lap,
+        gate: pilotRace.gate,
+        time: pilotRace.time
     }
 }
