@@ -33,7 +33,7 @@ async function postMessage (url, data) {
     try {
         var res = await fetch('http://127.0.0.1:3000' + url, {
             method: 'POST',
-            body: JSON.stringify(data.toString()),
+            body: JSON.stringify(data),
             headers: {
                 'Content-Type': 'application/json'
             }
