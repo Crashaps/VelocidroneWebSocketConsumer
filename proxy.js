@@ -8,23 +8,23 @@ const RACESTATUSKEYNAME = 'racestatus';
 const RACEACTIONKEYNAME = 'raceaction';
 
 async function message(data){
-    var json = data.toString();
+    var jsonString = data.toString();
     
-    if (json.length == 0) return
+    if (jsonString.length == 0) return
 
-    var data = JSON.parse(json);
+    var obj = JSON.parse(jsonString);
 
     var endpoint = null;
 
-    if (data[RACEDATAKEYNAME] != null) {
+    if (obj[RACEDATAKEYNAME] != null) {
         endpoint = '/racedata';
     }
-    else if (data[RACESTATUSKEYNAME] != null) {
+    else if (obj[RACESTATUSKEYNAME] != null) {
         endpoint = '/racestatus';
     }
 
     if (endpoint){
-        await postMessage(endpoint, data);
+        await postMessage(endpoint, obj);
     }
 }
 
@@ -33,7 +33,7 @@ async function postMessage (url, data) {
     try {
         var res = await fetch('http://127.0.0.1:3000' + url, {
             method: 'POST',
-            body: data.toString(),
+            body: JSON.stringify(data.toString()),
             headers: {
                 'Content-Type': 'application/json'
             }
