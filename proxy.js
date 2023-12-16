@@ -43,35 +43,35 @@ async function postMessage (url, data) {
     }
 }
 
-//await VelocidroneClient.initialise("settings.json", message);
+await VelocidroneClient.initialise("settings.json", message);
 
 //await VelocidroneClient.initialise("settings.json", (data) => {console.log(data.toString());});
 
-fs.readFile("./VelocidroneWebApp/crashvelocidronetest.txt",  "utf8", async (err, d) => {
-    let dataRows = d.split(/\r?\n/);
-    for (let row in dataRows)
-    {
-        var json = dataRows[row].toString();
+// fs.readFile("./VelocidroneWebApp/crashvelocidronetest.txt",  "utf8", async (err, d) => {
+//     let dataRows = d.split(/\r?\n/);
+//     for (let row in dataRows)
+//     {
+//         var json = dataRows[row].toString();
         
-        if (json.length == 0) return
+//         if (json.length == 0) return
 
-        var data = JSON.parse(json);
+//         var data = JSON.parse(json);
 
-        var endpoint = null;
+//         var endpoint = null;
 
-        if (data[RACEDATAKEYNAME] != null) {
-            endpoint = '/racedata';
-        }
-        else if (data[RACESTATUSKEYNAME] != null) {
-            endpoint = '/racestatus';
-        }
-        else if (data["racetype"] != null) {
-            endpoint = '/racetype';
-        }
+//         if (data[RACEDATAKEYNAME] != null) {
+//             endpoint = '/racedata';
+//         }
+//         else if (data[RACESTATUSKEYNAME] != null) {
+//             endpoint = '/racestatus';
+//         }
+//         else if (data["racetype"] != null) {
+//             endpoint = '/racetype';
+//         }
 
-        if (endpoint){
-            await postMessage(endpoint, JSON.stringify(data));
-        }
-    }
+//         if (endpoint){
+//             await postMessage(endpoint, JSON.stringify(data));
+//         }
+//     }
 
-});
+// });
